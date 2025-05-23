@@ -9,19 +9,29 @@
       background-color: #f0d9b5;
     }
     body { font-family: sans-serif; text-align: center; margin-top: 20px; }
+    #restart { display: none; margin-top: 10px; padding: 10px 20px; font-size: 16px; }
   </style>
 </head>
 <body>
   <h2>AI vs 플레이어 오목</h2>
   <p id="status">플레이어(흑)의 차례입니다.</p>
-  <canvas id="board" width="600" height="600"></canvas>
+  <canvas id="board" width="600" height="600"></canvas><br>
+  <button id="restart" onclick="restartGame()">게임 다시 시작</button>
   <script>
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d');
     const size = 15;
     const cell = canvas.width / size;
-    const board = Array.from({ length: size }, () => Array(size).fill(null));
+    let board;
     let gameOver = false;
+
+    function initBoard() {
+      board = Array.from({ length: size }, () => Array(size).fill(null));
+      drawBoard();
+      document.getElementById('status').textContent = '플레이어(흑)의 차례입니다.';
+      gameOver = false;
+      document.getElementById('restart').style.display = 'none';
+    }
 
     function drawBoard() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -66,20 +76,27 @@
       let score = 0;
       const dirs = [[1,0],[0,1],[1,1],[1,-1]];
       for (let [dx, dy] of dirs) {
-        let count = 1;
+        let count = 1, block = 0;
         for (let i = 1; i < 5; i++) {
           let nx = x + dx * i, ny = y + dy * i;
-          if (nx < 0 || ny < 0 || nx >= size || ny >= size || board[ny][nx] !== who) break;
-          count++;
+          if (nx < 0 || ny < 0 || nx >= size || ny >= size || board[ny][nx] === (who === 'white' ? 'black' : 'white')) {
+            block++; break;
+          }
+          if (board[ny][nx] === who) count++;
         }
         for (let i = 1; i < 5; i++) {
           let nx = x - dx * i, ny = y - dy * i;
-          if (nx < 0 || ny < 0 || nx >= size || ny >= size || board[ny][nx] !== who) break;
-          count++;
+          if (nx < 0 || ny < 0 || nx >= size || ny >= size || board[ny][nx] === (who === 'white' ? 'black' : 'white')) {
+            block++; break;
+          }
+          if (board[ny][nx] === who) count++;
         }
-        if (count === 5) score += 100000;
-        else if (count === 4) score += 10000;
-        else if (count === 3) score += 1000;
+        if (count >= 5) score += 100000;
+        else if (count === 4 && block === 0) score += 10000;
+        else if (count === 4) score += 5000;
+        else if (count === 3 && block === 0) score += 1000;
+        else if (count === 3) score += 500;
+        else if (count === 2 && block === 0) score += 200;
         else if (count === 2) score += 100;
       }
       return score;
@@ -92,7 +109,7 @@
         for (let x = 0; x < size; x++) {
           if (board[y][x]) continue;
           board[y][x] = 'white';
-          let score = evaluate(x, y, 'white') + evaluate(x, y, 'black');
+          let score = evaluate(x, y, 'white') + 0.8 * evaluate(x, y, 'black');
           board[y][x] = null;
           if (score > bestScore) {
             bestScore = score;
@@ -102,15 +119,22 @@
       }
       if (move) {
         const [x, y] = move;
-        board[y][x] = 'white';
-        drawStone(x, y, 'white');
-        if (checkWin(x, y, 'white')) {
-          document.getElementById('status').textContent = 'AI(백)이 승리했습니다!';
-          gameOver = true;
-        } else {
-          document.getElementById('status').textContent = '플레이어(흑)의 차례입니다.';
-        }
+        setTimeout(() => {
+          board[y][x] = 'white';
+          drawStone(x, y, 'white');
+          if (checkWin(x, y, 'white')) {
+            document.getElementById('status').textContent = 'AI(백)이 승리했습니다!';
+            gameOver = true;
+            document.getElementById('restart').style.display = 'inline-block';
+          } else {
+            document.getElementById('status').textContent = '플레이어(흑)의 차례입니다.';
+          }
+        }, 800);
       }
+    }
+
+    function restartGame() {
+      initBoard();
     }
 
     canvas.addEventListener('click', function(e) {
@@ -124,13 +148,14 @@
       if (checkWin(x, y, 'black')) {
         document.getElementById('status').textContent = '플레이어(흑)가 승리했습니다!';
         gameOver = true;
+        document.getElementById('restart').style.display = 'inline-block';
         return;
       }
       document.getElementById('status').textContent = 'AI(백)의 차례입니다...';
-      setTimeout(aiMove, 300);
+      aiMove();
     });
 
-    drawBoard();
+    initBoard();
   </script>
 </body>
 </html>
