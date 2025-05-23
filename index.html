@@ -27,12 +27,12 @@
       justify-content: center;
       flex-direction: column;
       color: white;
-      font-size: 28px;
+      font-size: 32px;
     }
     #restart {
-      margin-top: 20px;
-      padding: 15px 30px;
-      font-size: 22px;
+      margin-top: 30px;
+      padding: 20px 40px;
+      font-size: 24px;
       background-color: white;
       color: black;
       border: none;
@@ -133,13 +133,13 @@
           if (board[ny][nx] === who) count++;
           else if (board[ny][nx]) { block++; break; }
         }
-        if (count >= 5) score += 100000;
-        else if (count === 4 && block === 0) score += 10000;
-        else if (count === 4) score += 5000;
-        else if (count === 3 && block === 0) score += 3000;
-        else if (count === 3) score += 1500;
-        else if (count === 2 && block === 0) score += 800;
-        else if (count === 2) score += 400;
+        if (count >= 5) score += 1000000;
+        else if (count === 4 && block === 0) score += 100000;
+        else if (count === 4) score += 50000;
+        else if (count === 3 && block === 0) score += 30000;
+        else if (count === 3) score += 15000;
+        else if (count === 2 && block === 0) score += 8000;
+        else if (count === 2) score += 4000;
       }
       return score;
     }
@@ -151,7 +151,7 @@
         for (let x = 0; x < size; x++) {
           if (board[y][x]) continue;
           board[y][x] = 'white';
-          let score = 3 * evaluate(x, y, 'white') + evaluate(x, y, 'black');
+          let score = 10 * evaluate(x, y, 'white') + evaluate(x, y, 'black');
           board[y][x] = null;
           if (score > bestScore) {
             bestScore = score;
@@ -161,9 +161,9 @@
       }
       if (move) {
         const [x, y] = move;
-        lastAIMove = [x, y];
         setTimeout(() => {
           board[y][x] = 'white';
+          lastAIMove = [x, y];
           drawBoard();
           if (checkWin(x, y, 'white')) {
             gameOver = true;
